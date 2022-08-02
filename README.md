@@ -51,9 +51,9 @@ If decorations are aligned outside the allocated space, the size of the window i
 frame created by the decorator (i.e. the `_WMMC_DECORATE` client) MUST be _at least_ the same width
 and height, plus any `x` or `y` offset of the frame, as the decorated window. In this case, the
 decorator MUST send a `_WMMC_DECORATE` event back to the window manager indicating the position 
-(`x` and `y` unsigned offsets from the top-left of the decorated window; ex. `origin_x - offset_x`) 
-and size (width and height) of the created frame. The `_WMMC_DECORATE` event sent to the window
-manager MUST also include the window ID of the created frame.
+(`x` and `y` unsigned offsets from the top-left of the decorated window; ie. `window_x - frame_x`
+and `window_y - frame_y`) and size (width and height) of the created frame. The `_WMMC_DECORATE`
+event sent to the window manager MUST also include the window ID of the created frame.
 
 If decorations are aligned inside the allocated space, the size of the window decorations frame is
 fixed and MUST be created by the decorator according to the exact width and height provided by the
