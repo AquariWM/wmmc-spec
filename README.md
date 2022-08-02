@@ -60,7 +60,7 @@ they are represented as unsigned integers; because they MUST be negative, there 
 allow these integers to be signed: they can only ever be one sign.
 
 If it is the exact size of the window decorations, this means that the window decoration frame
-MUST be the specified `width` and height`. In this case, the client MUST send the `x`, `y`, `width`
+MUST be the specified `width` and `height`. In this case, the client MUST send the `x`, `y`, `width`
 and `height` that it allocates to the decorated window within this frame in the
 `_WMMC_DECORATE_NOTIFY` event that it sends the window manager.
 
