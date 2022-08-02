@@ -26,56 +26,41 @@ The `_WMMC_LAYOUT` protocol allows for the communication between a separate 'lay
 tiling window managers, and the window manager itself.
 
 ### `_WMMC_DECORATE`
-The `_WMMC_DECORATE` protocol allows for the communication between a separate 'window decorator'
-client, and the window manager itself. This separates the visual style of windows from the
-management of these windows; this means the same appearance can be kept even after changing window
-manager, and the appearance of one's desktop can be changed without having to switch window
-manager.
+The `_WMMC_DECORATE` protocol allows the decoration of windows (i.e. titlebars, borders, etc.)
+independent of the window manager, meaning a consistent visual style can be maintained across
+window managers.
 
-<!-- TODO: The `_WMMC_DECORATE_REQUEST` and `_WMMC_DECORATE_NOTIFY` atoms should be combined, as
-   -       there is no difference in their structure. A request can be identified because it will
-   -       be sent by the window manager to a `_WMMC_DECORATE` client, and a reply can be
-   -       identified because it will be sent by a `_WMMC_DECORATE` client to the root window. -->
+In the `_WMMC_DECORATE` protocol, window decorations can be considered to be aligned either inside
+or outside the space allocated for the window by the window manager. This is particularly useful
+when comparing floating and tiling layouts: in a floating window layout, it might make sense that
+window decorations are always 'added' to a window; they extend the area occupied by the window, so
+that they are not shrinking the window being decorated, however it might make more sense in a
+tiling window layout, where space is 'strictly' allocated to windows, that a window and its
+decorations never take up more or less room than is allocated by the window manager.
 
-#### `_WMMC_DECORATE_REQUEST`
-When a window is due for decoration, a window manager participating in the `_WMMC_DECORATE`
-protocol will send a `_WMMC_DECORATE_REQUEST` event to the client registered to decorate windows.
+A window manager participating in the `_WMMC_DECORATE` protocol SHALL send a `_WMMC_DECORATE` event
+to exactly one `_WMMC_DECORATE` client. This event SHALL contain the identifier for the window that
+shall be decorated, the new width and height allocated by the layout to this window (or, if not,
+the current width and height of the window), and a boolean value representing the alignment of
+window decorations, with `0`/`false` representing that decorations SHALL be placed outside the
+decorated window, and `1`/`true` representing that decorations SHALL be placed inside the decorated
+window. The window manager SHALL NOT include any `x` or `y` position with this event; these fields
+MUST be set to `0`, and are only for `_WMMC_DECORATE` clients to send events to the window manager.
 
-As there are situations where the outer window decorations must be a fixed size, particularly in
-tiling window layouts, a `_WMMC_DECOREATE` client MUST NOT size its window decoration frame
-according to the decorated window's geometry at the time of the `_WMMC_DECORATE_REQUEST`. Because
-of this, the request will contain, in addition to the `window` that must be decorated, three other
-fields: the `width`, the `height`, and a boolean state.
+If decorations are aligned outside the allocated space, the size of the window is fixed and the
+frame created by the decorator (i.e. the `_WMMC_DECORATE` client) MUST be _at least_ the same width
+and height, plus any `x` or `y` offset of the frame, as the decorated window. In this case, the
+decorator MUST send a `_WMMC_DECORATE` event back to the window manager indicating the position 
+(`x` and `y` unsigned offsets from the top-left of the decorated window; ex. `origin_x - offset_x`) 
+and size (width and height) of the created frame. The `_WMMC_DECORATE` event sent to the window
+manager MUST also include the window ID of the created frame.
 
-That boolean state specifies whether the `width` and `height` provided SHALL be treated as the
-exact size of the window being decorated, or whether they should be treated as the exact size of
-the window decorations.
-
-If the boolean state is the exact size of the window being decorated, this means that the window
-decoration frame MUST be _at least_ the specified `width` and `height`, but MAY be larger. In this
-case, the client MUST send the `x`, `y`, `width` and `height` of its frame. The `x` and `y`
-coordinates MUST be negative or zero, and they describe the offset of the window decorations frame
-relative to the top-left corner of the decorated window. Though they will be negative numbers,
-they are represented as unsigned integers; because they MUST be negative, there is no need to
-allow these integers to be signed: they can only ever be one sign.
-
-If it is the exact size of the window decorations, this means that the window decoration frame
-MUST be the specified `width` and `height`. In this case, the client MUST send the `x`, `y`, `width`
-and `height` that it allocates to the decorated window within this frame in the
-`_WMMC_DECORATE_NOTIFY` event that it sends the window manager.
-
-#### `_WMMC_DECORATE_NOTIFY`
-Sent by the `_WMMC_DECORATE` client as soon as it knows the position and dimensions of either its
-frame or the decorated window within this frame, depending on which boolean state was associated
-with this decoration. The client SHALL NOT wait for its window decorations to render before sending
-this reply, though it MUST have created its frame window before sending this reply, as this reply
-includes the frame created by the `_WMMC_DECORATE` client so that the window manager can reparent
-the decorated window to this frame. The window manager MAY do the reparenting immediately, or it
-MAY reparent the decorated window at a later time, or even not at all. The `_WMMC_DECORATE` client
-MUST NOT expect the window manager to reparent the decorated window to the frame, NOR SHALL it
-expect the window manager to reparent the decorated window to the frame at any specific time: it is
-up to the window manager as to when and if it will do so. It is, however, RECOMMENDED that the
-window manager will reparent the decorated window to the frame when possible.
+If decorations are aligned inside the allocated space, the size of the window decorations frame is
+fixed and MUST be created by the decorator according to the exact width and height provided by the
+window manager. In this case, the decorator MUST send a `_WMMC_DECORATE` event back to the window
+manager indicating the position (relative to the frame's top-left corner) and size to apply to the
+decorated window when placing it within the frame. The `_WMMC_DECORATE` event sent to the window
+manager MUST also include the window ID of the created frame.
 
 ### `_WMMC_CONFIG`
 The `_WMMC_CONFIG` protocol allows for the universal configuration of compliant window managers. It
